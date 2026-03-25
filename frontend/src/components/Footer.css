@@ -1,0 +1,101 @@
+.coffee-footer {
+  position: relative;
+  z-index: 1;
+  max-width: 1320px;
+  margin: 36px auto 0;
+  border-radius: 26px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(62, 33, 18, 0.25);
+}
+
+.coffee-footer__banner {
+  height: 88px;
+  background-image:
+    linear-gradient(120deg, rgba(58, 28, 16, 0.08), rgba(58, 28, 16, 0.45)),
+    url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1400&h=320&fit=crop');
+  background-position: center;
+  background-size: cover;
+}
+
+.coffee-footer__panel {
+  position: relative;
+  padding: 42px 42px 76px;
+  background: linear-gradient(90deg, #2f1a10, #4a2a16);
+  color: #fff8f2;
+}
+
+.coffee-footer__top {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.coffee-footer__brand {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: 0.03em;
+}
+
+.coffee-footer__top p {
+  margin: 12px 0 0;
+  color: rgba(255, 248, 242, 0.88);
+}
+
+.coffee-footer__country {
+  color: #fff8f2;
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  font-size: 1.15rem;
+}
+
+.coffee-footer__socials,
+.coffee-footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin-top: 26px;
+}
+
+.coffee-footer__socials a,
+.coffee-footer__links a {
+  color: rgba(255, 248, 242, 0.95);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.coffee-footer__socials a:hover,
+.coffee-footer__links a:hover {
+  text-decoration: underline;
+}
+
+.coffee-footer__copyright {
+  margin: 28px 0 0;
+  font-weight: 700;
+}
+
+.coffee-footer__top-btn {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 14px;
+  background: #efe8df;
+  color: #3f2a1f;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .coffee-footer__panel {
+    padding: 28px 18px 74px;
+  }
+
+  .coffee-footer__top {
+    flex-direction: column;
+  }
+
+  .coffee-footer__brand {
+    font-size: 1.7rem;
+  }
+}

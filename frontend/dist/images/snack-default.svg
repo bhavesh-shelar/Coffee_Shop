@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="g2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d98a4e"/>
+      <stop offset="100%" stop-color="#f2b36a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="#fff4e8"/>
+  <circle cx="150" cy="80" r="110" fill="#fde4cc"/>
+  <rect x="180" y="260" rx="36" ry="36" width="420" height="180" fill="url(#g2)"/>
+  <circle cx="320" cy="280" r="60" fill="#fbe2c8"/>
+  <circle cx="400" cy="250" r="52" fill="#f7d3ae"/>
+  <circle cx="480" cy="280" r="60" fill="#fbe2c8"/>
+  <text x="400" y="520" text-anchor="middle" font-size="44" fill="#8a4f2b" font-family="Segoe UI, Arial, sans-serif">Tasty Snack</text>
+</svg>

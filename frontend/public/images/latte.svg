@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="lg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8d5533"/>
+      <stop offset="100%" stop-color="#be7a4c"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="#f8efe7"/>
+  <ellipse cx="400" cy="470" rx="250" ry="34" fill="#dfc2a8"/>
+  <rect x="240" y="190" rx="44" ry="44" width="300" height="240" fill="url(#lg)"/>
+  <rect x="268" y="220" rx="22" ry="22" width="244" height="140" fill="#f7e8da"/>
+  <path d="M340 290c25-30 95-30 120 0-25 30-95 30-120 0z" fill="#c18860"/>
+  <rect x="548" y="250" rx="25" ry="25" width="70" height="105" fill="#a8673f"/>
+  <text x="400" y="520" text-anchor="middle" font-size="44" fill="#6c4229" font-family="Segoe UI, Arial, sans-serif">Latte</text>
+</svg>

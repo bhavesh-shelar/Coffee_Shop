@@ -1,0 +1,3 @@
+Server running on http://localhost:5000
+API docs: http://localhost:5000/
+MySQL connected to "coffee_db". API running on http://localhost:5000

@@ -1,0 +1,127 @@
+.product-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 28px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 246, 239, 0.92));
+  box-shadow: 0 16px 35px rgba(77, 46, 28, 0.12);
+  animation: cardPulse 7.2s ease-in-out infinite;
+}
+
+.product-card__media {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+}
+
+.product-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.45s ease;
+}
+
+.product-card:hover .product-card__media img {
+  transform: scale(1.06);
+}
+
+.product-card__tag {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: #fffdf8;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.product-card__tag--coffee {
+  background: rgba(92, 52, 31, 0.88);
+}
+
+.product-card__tag--snack {
+  background: rgba(207, 124, 63, 0.9);
+}
+
+.product-card__body {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+}
+
+.product-card__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.product-card__heading h3 {
+  margin: 0;
+  color: #432818;
+  font-size: 1.2rem;
+}
+
+.product-card__heading strong {
+  color: #9c5c2f;
+  font-size: 1.1rem;
+  white-space: nowrap;
+}
+
+.product-card__body p {
+  margin: 0;
+  color: #6f5a4c;
+}
+
+.product-card__actions {
+  display: flex;
+  gap: 10px;
+}
+
+.product-card__button {
+  flex: 1;
+  border: 0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-weight: 700;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.product-card__button--primary {
+  background: linear-gradient(135deg, #6d3f22, #b46a3a);
+  color: #fff9f4;
+  box-shadow: 0 10px 20px rgba(132, 78, 43, 0.22);
+}
+
+.product-card__button--ghost {
+  background: rgba(111, 90, 76, 0.08);
+  color: #5a4335;
+}
+
+.product-card__button:hover {
+  transform: translateY(-1px);
+}
+
+.product-card__button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@keyframes cardPulse {
+  0%,
+  100% {
+    box-shadow: 0 16px 35px rgba(77, 46, 28, 0.12);
+  }
+  50% {
+    box-shadow: 0 22px 42px rgba(77, 46, 28, 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card {
+    animation: none !important;
+  }
+}
