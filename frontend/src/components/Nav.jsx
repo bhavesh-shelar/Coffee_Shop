@@ -4,6 +4,7 @@ const menuItems = [
   { id: 'home', label: 'Home', icon: 'Home' },
   { id: 'coffee', label: 'Coffee', icon: 'Brew' },
   { id: 'snack', label: 'Snacks', icon: 'Bake' },
+  { id: 'admin', label: 'Admin', icon: 'Shield' },
 ]
 
 const Nav = ({ currentPage, onPageChange }) => {

@@ -7,6 +7,7 @@ import Footer from './components/Footer.jsx'
 import HomePage from './components/HomePage.jsx'
 import Nav from './components/Nav.jsx'
 import SnackPage from './components/SnackPage.jsx'
+import AdminPage from './components/AdminPage.jsx'
 import './App.css'
 
 const mockProducts = [
@@ -38,6 +39,11 @@ const pageMeta = {
     eyebrow: 'Bakery Counter',
     title: 'Snack pairings that make every cup better.',
     subtitle: 'From cookies to croissants, every snack card stays interactive, searchable, and ready to order.',
+  },
+  admin: {
+    eyebrow: 'Manager Tools',
+    title: 'Admin Dashboard & Health Monitoring',
+    subtitle: 'Refresh backend health checks, view database mode, and manage menu data from one place.',
   },
 }
 
@@ -198,6 +204,10 @@ function App() {
   }
 
   const content = useMemo(() => {
+    if (currentPage === 'admin') {
+      return <AdminPage />
+    }
+
     if (currentPage === 'coffee') {
       return <CoffeePage products={products} />
     }

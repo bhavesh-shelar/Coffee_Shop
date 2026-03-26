@@ -2,6 +2,8 @@ const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
@@ -30,7 +32,14 @@ let db = null;
 let dbConnected = false;
 let dbError = null;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      'http://localhost:3000',
+      'https://your-frontend-url.onrender.com',
+    ],
+  }),
+);
 app.use(express.json());
 
 const dbConfig = {
@@ -704,7 +713,34 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+// Serve frontend build if it exists (for integrated deployment).
+const frontendBuildPath = path.join(__dirname, '..', 'frontend', 'dist');
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+  });
+}
+
+const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`API docs: http://localhost:${PORT}/`);
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Shut down the running server or change PORT.`);
+  } else {
+    console.error('Server error:', error);
+  }
+  process.exit(1);
+});
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Shut down the running server or change PORT.`);
+  } else {
+    console.error('Server error:', error);
+  }
+  process.exit(1);
 });

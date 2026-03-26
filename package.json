@@ -1,6 +1,17 @@
 {
+  "name": "coffee-shop",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node index.js",
+    "dev": "npx concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install"
+  },
   "dependencies": {
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.0.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
   }
 }
