@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "build": "cd frontend && npm run build",
     "start": "node index.js",
     "dev": "npx concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
     "postinstall": "cd backend && npm install && cd ../frontend && npm install"

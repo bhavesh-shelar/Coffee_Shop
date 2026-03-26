@@ -36,7 +36,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:3000',
-      'https://your-frontend-url.onrender.com',
+      'https://coffee-shop-2-rwiw.onrender.com',
     ],
   }),
 );
@@ -682,7 +682,7 @@ app.post('/api/orders', async (req, res) => {
   return res.status(201).json(order);
 });
 
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.json({
     message: 'Coffee Shop API',
     mode: dbConnected ? 'database' : 'fallback',
@@ -719,6 +719,10 @@ if (fs.existsSync(frontendBuildPath)) {
   app.use(express.static(frontendBuildPath));
   app.get('*', (req, res) => {
     res.sendFile(path.join(frontendBuildPath, 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.redirect('/api');
   });
 }
 
