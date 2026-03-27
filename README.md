@@ -11,7 +11,7 @@ React frontend + Node/Express backend + MySQL (XAMPP).
 1. Start `Apache` and `MySQL` in XAMPP control panel.
 2. Open phpMyAdmin.
 3. Use database name `coffee_db` (the backend creates it automatically).
-4. Optional: import [`backend/db/schema.sql`](backend/db/schema.sql) if you want to create tables manually.
+4. Optional: import [`backend/db/schema.sql`](backend/db/schema.sql) or [`database/schema.sql`](database/schema.sql) if you want to create tables manually.
 
 ## Environment (backend/.env)
 ```env

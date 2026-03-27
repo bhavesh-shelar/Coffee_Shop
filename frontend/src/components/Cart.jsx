@@ -1,14 +1,37 @@
 import axios from 'axios'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useCart } from '../context/CartContext.jsx'
 import './Cart.css'
+
+const MERCHANT_UPI_STORAGE_KEY = 'coffee-shop-merchant-upi-vpa'
+const DEFAULT_MERCHANT_UPI_VPA = '9307569939-2@ybl'
+
+const isValidUpiVpa = (vpa) => /^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9.-]{2,}$/.test(String(vpa || '').trim())
+const buildLocalUpiUrl = ({ amount, transactionRef, upiVpa, payeeName }) => {
+  const params = new URLSearchParams({
+    pa: upiVpa,
+    pn: payeeName || 'Coffee Shop',
+    am: Number(amount).toFixed(2),
+    cu: 'INR',
+    tn: 'Coffee order payment',
+    tr: transactionRef,
+  })
+  return `upi://pay?${params.toString()}`
+}
 
 const Cart = () => {
   const { cart, total, clearCart, deleteItem } = useCart()
   const [checkoutState, setCheckoutState] = useState({ status: 'idle', message: '' })
+  const [merchantUpiVpa, setMerchantUpiVpa] = useState(() => {
+    if (typeof window === 'undefined') {
+      return DEFAULT_MERCHANT_UPI_VPA
+    }
+    return String(window.localStorage.getItem(MERCHANT_UPI_STORAGE_KEY) || DEFAULT_MERCHANT_UPI_VPA).trim()
+  })
   const [paymentState, setPaymentState] = useState({
     open: false,
+    mode: 'api',
     sessionId: '',
     upiUrl: '',
     qrUrl: '',
@@ -20,6 +43,20 @@ const Cart = () => {
     error: '',
   })
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    const value = String(merchantUpiVpa || '').trim()
+    if (!value) {
+      window.localStorage.removeItem(MERCHANT_UPI_STORAGE_KEY)
+      return
+    }
+
+    window.localStorage.setItem(MERCHANT_UPI_STORAGE_KEY, value)
+  }, [merchantUpiVpa])
+
   const startUpiCheckout = async () => {
     if (cart.length === 0) {
       return
@@ -27,9 +64,14 @@ const Cart = () => {
 
     try {
       setCheckoutState({ status: 'loading', message: 'Preparing secure UPI payment...' })
-      const response = await axios.post('/api/payments/upi/init', { items: cart, total })
+      const response = await axios.post('/api/payments/upi/init', {
+        items: cart,
+        total,
+        upi_vpa: String(merchantUpiVpa || '').trim() || undefined,
+      })
       setPaymentState({
         open: true,
+        mode: 'api',
         sessionId: response.data?.payment_session_id || '',
         upiUrl: response.data?.upi_url || '',
         qrUrl: response.data?.qr_url || '',
@@ -43,9 +85,39 @@ const Cart = () => {
       setCheckoutState({ status: 'idle', message: 'UPI checkout opened. Complete payment to place order.' })
     } catch (error) {
       console.error('UPI payment init failed:', error)
+      const serverMessage = String(error?.response?.data?.error || '')
+      const canUseLocalFallback =
+        isValidUpiVpa(merchantUpiVpa) &&
+        (error?.response?.status === 503 || /UPI is not configured/i.test(serverMessage))
+
+      if (canUseLocalFallback) {
+        const transactionRef = `CS${Date.now()}`
+        const upiUrl = buildLocalUpiUrl({
+          amount: total,
+          transactionRef,
+          upiVpa: String(merchantUpiVpa).trim(),
+          payeeName: 'Coffee Shop',
+        })
+        setPaymentState({
+          open: true,
+          mode: 'local',
+          sessionId: '',
+          upiUrl,
+          qrUrl: `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUrl)}`,
+          amount: Number(total || 0),
+          payeeName: 'Coffee Shop',
+          upiVpa: String(merchantUpiVpa).trim(),
+          upiRef: transactionRef,
+          confirming: false,
+          error: '',
+        })
+        setCheckoutState({ status: 'idle', message: 'UPI checkout opened. Complete payment to place order.' })
+        return
+      }
+
       setCheckoutState({
         status: 'error',
-        message: error.response?.data?.error || 'Unable to start UPI payment right now. Please try again.',
+        message: serverMessage || 'Unable to start UPI payment right now. Please try again.',
       })
     }
   }
@@ -65,6 +137,46 @@ const Cart = () => {
   }
 
   const confirmUpiPayment = async () => {
+    const reference = String(paymentState.upiRef || `CS${Date.now()}`).trim()
+
+    if (paymentState.mode === 'local') {
+      try {
+        setPaymentState((current) => ({ ...current, confirming: true, error: '' }))
+        const response = await axios.post('/api/orders', {
+          items: cart,
+          payment: {
+            method: 'upi',
+            status: 'paid',
+            upi_transaction_ref: reference,
+          },
+        })
+        const orderId = response.data?.id ? `#${response.data.id}` : 'received'
+        clearCart()
+        setPaymentState({
+          open: false,
+          mode: 'api',
+          sessionId: '',
+          upiUrl: '',
+          qrUrl: '',
+          amount: 0,
+          payeeName: '',
+          upiVpa: '',
+          upiRef: '',
+          confirming: false,
+          error: '',
+        })
+        setCheckoutState({ status: 'success', message: `Payment successful. Order ${orderId} is confirmed.` })
+      } catch (error) {
+        console.error('Fallback UPI order create failed:', error)
+        setPaymentState((current) => ({
+          ...current,
+          confirming: false,
+          error: error.response?.data?.error || 'Unable to create order after payment. Please try again.',
+        }))
+      }
+      return
+    }
+
     if (!paymentState.sessionId) {
       setPaymentState((current) => ({ ...current, error: 'Missing payment session. Please start checkout again.' }))
       return
@@ -74,12 +186,13 @@ const Cart = () => {
       setPaymentState((current) => ({ ...current, confirming: true, error: '' }))
       const response = await axios.post('/api/payments/upi/confirm', {
         payment_session_id: paymentState.sessionId,
-        upi_transaction_ref: paymentState.upiRef,
+        upi_transaction_ref: reference,
       })
       const orderId = response.data?.id ? `#${response.data.id}` : 'received'
       clearCart()
       setPaymentState({
         open: false,
+        mode: 'api',
         sessionId: '',
         upiUrl: '',
         qrUrl: '',
@@ -162,6 +275,18 @@ const Cart = () => {
           <strong>${total.toFixed(2)}</strong>
         </div>
 
+        <label htmlFor="merchant-upi-vpa" className="cart-panel__label">
+          Merchant UPI ID (for live payment)
+        </label>
+        <input
+          id="merchant-upi-vpa"
+          className="cart-panel__input"
+          type="text"
+          value={merchantUpiVpa}
+          onChange={(event) => setMerchantUpiVpa(event.target.value)}
+          placeholder="yourname@oksbi"
+        />
+
         {checkoutState.message ? (
           <p className={`cart-panel__status cart-panel__status--${checkoutState.status}`}>{checkoutState.message}</p>
         ) : null}
@@ -169,7 +294,7 @@ const Cart = () => {
         <motion.button
           type="button"
           onClick={startUpiCheckout}
-          disabled={cart.length === 0 || checkoutState.status === 'loading'}
+          disabled={cart.length === 0 || checkoutState.status === 'loading' || (merchantUpiVpa && !isValidUpiVpa(merchantUpiVpa))}
           className="cart-panel__checkout"
           whileHover={cart.length > 0 ? { scale: 1.01 } : {}}
           whileTap={cart.length > 0 ? { scale: 0.99 } : {}}

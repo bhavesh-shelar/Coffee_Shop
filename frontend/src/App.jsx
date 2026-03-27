@@ -47,6 +47,16 @@ const pageMeta = {
   },
 }
 
+const validPages = new Set(['home', 'coffee', 'snack', 'admin'])
+
+const getPageFromHash = () => {
+  if (typeof window === 'undefined') {
+    return 'home'
+  }
+  const hashPage = window.location.hash.replace('#', '').trim().toLowerCase()
+  return validPages.has(hashPage) ? hashPage : 'home'
+}
+
 const pageTransition = {
   initial: { opacity: 0, y: 18 },
   animate: { opacity: 1, y: 0 },
@@ -72,11 +82,26 @@ const normalizeProducts = (list) =>
     : []
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('home')
+  const [currentPage, setCurrentPage] = useState(getPageFromHash)
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [apiMode, setApiMode] = useState('loading')
   const [menuBusy, setMenuBusy] = useState(false)
+  const [feedbackForm, setFeedbackForm] = useState({ name: '', message: '' })
+  const [feedbackStatus, setFeedbackStatus] = useState('')
+  const [feedbackItems, setFeedbackItems] = useState([
+    { id: 1, name: 'Priya', message: 'Loved the cappuccino. Please add sugar-free options too.' },
+    { id: 2, name: 'Aman', message: 'Delivery was fast and coffee arrived hot. Great service!' },
+  ])
+
+  useEffect(() => {
+    const onHashChange = () => {
+      setCurrentPage(getPageFromHash())
+    }
+
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -148,6 +173,24 @@ function App() {
   const currentMeta = pageMeta[currentPage]
   const menuCount = products.length
 
+  const handlePageChange = (nextPage) => {
+    if (!validPages.has(nextPage)) {
+      return
+    }
+
+    setCurrentPage(nextPage)
+    if (typeof window === 'undefined') {
+      return
+    }
+
+    if (nextPage === 'home') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search)
+      return
+    }
+
+    window.location.hash = nextPage
+  }
+
   const addProduct = async (rawProduct) => {
     const payload = {
       ...rawProduct,
@@ -216,8 +259,31 @@ function App() {
       return <SnackPage products={products} />
     }
 
-    return <HomePage products={products} onAddProduct={addProduct} onRemoveProduct={removeProduct} menuBusy={menuBusy} />
-  }, [addProduct, currentPage, menuBusy, products, removeProduct])
+    return <HomePage products={products} />
+  }, [currentPage, products])
+
+  const handleFeedbackChange = (event) => {
+    const { name, value } = event.target
+    setFeedbackForm((current) => ({ ...current, [name]: value }))
+  }
+
+  const handleFeedbackSubmit = (event) => {
+    event.preventDefault()
+    const name = String(feedbackForm.name || '').trim()
+    const message = String(feedbackForm.message || '').trim()
+
+    if (!name || !message) {
+      setFeedbackStatus('Please enter your name and feedback message.')
+      return
+    }
+
+    setFeedbackItems((current) => [
+      { id: Date.now(), name, message },
+      ...current.slice(0, 3),
+    ])
+    setFeedbackForm({ name: '', message: '' })
+    setFeedbackStatus('Thank you. Your feedback has been submitted.')
+  }
 
   return (
     <div className="app-shell">
@@ -259,7 +325,7 @@ function App() {
         </div>
       </div>
 
-      <Nav currentPage={currentPage} onPageChange={setCurrentPage} />
+      <Nav currentPage={currentPage} onPageChange={handlePageChange} />
 
       <main className="app-main">
         <section className="app-content">
@@ -296,6 +362,31 @@ function App() {
             </motion.div>
           </motion.header>
 
+          {currentPage === 'coffee' ? (
+            <motion.section
+              className="coffee-feature"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
+              <div className="coffee-feature__circle">
+                <img
+                  src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=900&h=900&fit=crop"
+                  alt="Signature Arabica Coffee Beans"
+                />
+                <div className="coffee-feature__overlay">
+                  <p>Signature Arabica</p>
+                  <strong>Coffee Beans</strong>
+                </div>
+              </div>
+
+              <div className="coffee-feature__banner">
+                <h3>Cold Brew at Home</h3>
+                <p>Hot Brew - Ready in 5 Minutes</p>
+              </div>
+            </motion.section>
+          ) : null}
+
           {loading ? (
             <motion.section className="loading-panel" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="loading-cup">
@@ -317,6 +408,56 @@ function App() {
 
         <aside className="app-sidebar">
           <Cart />
+          <section className="sidebar-showcase">
+            <article className="sidebar-showcase__card">
+              <p className="sidebar-showcase__eyebrow">Brew Of The Day</p>
+              <h3>Caramel Cinnamon Latte</h3>
+              <p>Freshly pulled espresso, steamed milk, caramel drizzle, and cinnamon foam.</p>
+              <strong>Rs 189</strong>
+            </article>
+
+            <article className="sidebar-showcase__card">
+              <p className="sidebar-showcase__eyebrow">Cafe Timings</p>
+              <p>Mon - Fri: 8:00 AM to 10:00 PM</p>
+              <p>Sat - Sun: 9:00 AM to 11:00 PM</p>
+            </article>
+
+            <article className="sidebar-showcase__card">
+              <p className="sidebar-showcase__eyebrow">Quick Delivery</p>
+              <p>Average delivery in 20-30 minutes with live order updates.</p>
+            </article>
+
+            <article className="sidebar-showcase__card sidebar-feedback">
+              <p className="sidebar-showcase__eyebrow">Customer Query</p>
+              <h3>Feedback Corner</h3>
+              <form className="sidebar-feedback__form" onSubmit={handleFeedbackSubmit}>
+                <input
+                  name="name"
+                  value={feedbackForm.name}
+                  onChange={handleFeedbackChange}
+                  placeholder="Your name"
+                />
+                <textarea
+                  name="message"
+                  value={feedbackForm.message}
+                  onChange={handleFeedbackChange}
+                  placeholder="Write your feedback or query"
+                  rows={3}
+                />
+                <button type="submit">Send Feedback</button>
+              </form>
+              {feedbackStatus ? <p className="sidebar-feedback__status">{feedbackStatus}</p> : null}
+
+              <div className="sidebar-feedback__list">
+                {feedbackItems.map((item) => (
+                  <div key={item.id} className="sidebar-feedback__item">
+                    <strong>{item.name}</strong>
+                    <p>{item.message}</p>
+                  </div>
+                ))}
+              </div>
+            </article>
+          </section>
         </aside>
       </main>
 

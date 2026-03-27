@@ -50,7 +50,7 @@ const dbConfig = {
 };
 
 const paymentConfig = {
-  upiVpa: String(process.env.UPI_VPA || '').trim(),
+  upiVpa: String(process.env.UPI_VPA || '9307569939-2@ybl').trim(),
   payeeName: process.env.UPI_PAYEE_NAME || 'Coffee Shop',
   note: process.env.UPI_NOTE || 'Coffee order payment',
 };
@@ -79,8 +79,8 @@ const PLACEHOLDER_UPI_IDS = new Set([
 
 const isValidUpiVpa = (vpa) => /^[a-zA-Z0-9._-]{2,}@[a-zA-Z0-9.-]{2,}$/.test(String(vpa || '').trim());
 
-const getUpiConfigError = () => {
-  const vpa = String(paymentConfig.upiVpa || '').trim().toLowerCase();
+const getUpiConfigError = (upiVpa) => {
+  const vpa = String(upiVpa || '').trim().toLowerCase();
   if (!vpa) {
     return 'UPI is not configured. Set UPI_VPA in backend/.env (example: yourname@okhdfcbank).';
   }
@@ -152,13 +152,13 @@ const normalizePayment = (input) => {
   };
 };
 
-const buildUpiUrl = ({ amount, transactionRef }) => {
+const buildUpiUrl = ({ amount, transactionRef, upiVpa, payeeName, note }) => {
   const params = new URLSearchParams({
-    pa: paymentConfig.upiVpa,
-    pn: paymentConfig.payeeName,
+    pa: upiVpa,
+    pn: payeeName,
     am: Number(amount).toFixed(2),
     cu: 'INR',
-    tn: paymentConfig.note,
+    tn: note,
     tr: transactionRef,
   });
 
@@ -588,7 +588,14 @@ app.post('/api/payments/razorpay/verify', async (req, res) => {
 app.post('/api/payments/upi/init', async (req, res) => {
   cleanupPaymentSessions();
 
-  const upiConfigError = getUpiConfigError();
+  const requestedUpiVpa = String(req.body?.upi_vpa || req.body?.merchant_upi_vpa || '').trim();
+  const requestedPayeeName = String(req.body?.payee_name || '').trim();
+  const requestedNote = String(req.body?.note || '').trim();
+  const activeUpiVpa = requestedUpiVpa || paymentConfig.upiVpa;
+  const activePayeeName = requestedPayeeName || paymentConfig.payeeName;
+  const activeNote = requestedNote || paymentConfig.note;
+
+  const upiConfigError = getUpiConfigError(activeUpiVpa);
   if (upiConfigError) {
     return res.status(503).json({ error: upiConfigError });
   }
@@ -606,13 +613,22 @@ app.post('/api/payments/upi/init', async (req, res) => {
 
   const paymentSessionId = createPaymentSessionId();
   const transactionRef = `CS${Date.now()}`;
-  const upiUrl = buildUpiUrl({ amount: total, transactionRef });
+  const upiUrl = buildUpiUrl({
+    amount: total,
+    transactionRef,
+    upiVpa: activeUpiVpa,
+    payeeName: activePayeeName,
+    note: activeNote,
+  });
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUrl)}`;
 
   paymentSessions.set(paymentSessionId, {
     createdAt: Date.now(),
     items,
     total,
+    upi_vpa: activeUpiVpa,
+    payee_name: activePayeeName,
+    note: activeNote,
     upi_transaction_ref: transactionRef,
   });
 
@@ -622,9 +638,9 @@ app.post('/api/payments/upi/init', async (req, res) => {
     qr_url: qrUrl,
     amount: total,
     currency: 'INR',
-    payee_name: paymentConfig.payeeName,
-    upi_vpa: paymentConfig.upiVpa,
-    note: paymentConfig.note,
+    payee_name: activePayeeName,
+    upi_vpa: activeUpiVpa,
+    note: activeNote,
     upi_transaction_ref: transactionRef,
   });
 });
@@ -729,15 +745,6 @@ if (fs.existsSync(frontendBuildPath)) {
 const server = app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
   console.log(`API docs: http://localhost:${PORT}/`);
-});
-
-server.on('error', (error) => {
-  if (error.code === 'EADDRINUSE') {
-    console.error(`Port ${PORT} is already in use. Shut down the running server or change PORT.`);
-  } else {
-    console.error('Server error:', error);
-  }
-  process.exit(1);
 });
 
 server.on('error', (error) => {

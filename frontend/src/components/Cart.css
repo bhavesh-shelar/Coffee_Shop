@@ -133,6 +133,31 @@
   font-size: 1.5rem;
 }
 
+.cart-panel__label {
+  font-size: 0.84rem;
+  color: rgba(255, 246, 239, 0.86);
+  font-weight: 700;
+}
+
+.cart-panel__input {
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff6ef;
+  outline: none;
+}
+
+.cart-panel__input::placeholder {
+  color: rgba(255, 246, 239, 0.55);
+}
+
+.cart-panel__input:focus {
+  border-color: rgba(255, 200, 152, 0.8);
+  box-shadow: 0 0 0 3px rgba(255, 200, 152, 0.18);
+}
+
 .cart-panel__status {
   margin: 0;
   padding: 12px 14px;

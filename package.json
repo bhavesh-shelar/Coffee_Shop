@@ -4,8 +4,9 @@
   "private": true,
   "scripts": {
     "build": "cd frontend && npm run build",
-    "start": "node index.js",
-    "dev": "npx concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\"",
+    "start": "node backend/server.js",
+    "dev": "node backend/server.js",
+    "dev:full": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
     "postinstall": "cd backend && npm install && cd ../frontend && npm install"
   },
   "dependencies": {
